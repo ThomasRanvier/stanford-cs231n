@@ -45,7 +45,7 @@ def softmax_loss_naive(W, X, y, reg):
   probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
   Li = -np.log(probs[range(num_train), y])
   #Full loss = mean of Li + regularisation
-  loss = np.mean(Li) + (reg * np.sum(W * W))
+  loss = (np.sum(Li) / num_train) + (reg * np.sum(W * W))
   #------------#
   #--Gradient--#
   #------------#
@@ -94,7 +94,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
   Li = -np.log(probs[range(num_train), y])
   #Full loss = mean of Li + regularisation
-  loss = np.mean(Li) + (reg * np.sum(W * W))
+  loss = (np.sum(Li) / num_train) + (reg * np.sum(W * W))
   #------------#
   #--Gradient--#
   #------------#

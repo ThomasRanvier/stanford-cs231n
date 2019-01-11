@@ -80,7 +80,7 @@ class TwoLayerNet(object):
     #-----------#
     #http://cs231n.github.io/neural-networks-case-study/
     #Use relu as an activation function: np.max(0, ...)
-    hidden_layer = np.max(0, np.dot(X, W1) + b1)
+    hidden_layer = np.maximum(0, np.dot(X, W1) + b1)
     #Output layer
     scores = np.dot(hidden_layer, W2) + b2
     #############################################################################
@@ -101,15 +101,15 @@ class TwoLayerNet(object):
     #---------------#
     #-Normalisation-#
     #---------------#
-    exp_scores = np.exp(scores)
+    exp_scores = np.exp(scores - np.max(scores, axis=1, keepdims=True))
     normalised_scores = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
 
     #------------#
     #----Loss----#
     #------------#
     #Average cross entropy loss
-    data_loss = np.mean(-np.log(normalised_scores))#[range(N), y]))
-    reg_loss = 0.5 * reg * np.sum(W1 * W1) + 0.5 * reg * np.sum(W2 * W2)
+    data_loss = np.sum(-np.log(normalised_scores[range(N), y])) / N
+    reg_loss = reg * np.sum(W1 * W1) + reg * np.sum(W2 * W2)
     loss = data_loss + reg_loss
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -123,7 +123,7 @@ class TwoLayerNet(object):
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
     dscores = normalised_scores
-    dscores[:, :] -= 1#[range(N), y] -= 1
+    dscores[range(N), y] -= 1
     dscores /= N
     grads['W2'] = np.dot(hidden_layer.T, dscores)
     grads['b2'] = np.sum(dscores, axis=0, keepdims=True)
@@ -135,8 +135,8 @@ class TwoLayerNet(object):
     grads['W1'] = np.dot(X.T, dhidden)
     grads['b1'] = np.sum(dhidden, axis=0, keepdims=True)
     # add regularization gradient contribution
-    grads['W2'] += reg * W2
-    grads['W1'] += reg * W1
+    grads['W2'] += 2 * reg * W2
+    grads['W1'] += 2 * reg * W1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -178,8 +178,13 @@ class TwoLayerNet(object):
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
       #/!\ Replace to false so we don't choose twice or more the same index
-      X_batch = X[np.random.choice(num_train, batch_size, replace=False)]
-      y_batch = y[np.random.choice(num_train, batch_size, replace=False)]
+      if num_train >= batch_size:
+          indices = np.random.choice(num_train, batch_size, replace=False) 
+          X_batch = X[indices]
+          y_batch = y[indices]
+      else:
+          X_batch = X
+          y_batch = y
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -194,8 +199,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      for param in ['W1', 'b1', 'W2', 'b2']:
+      for param in ['W1', 'W2']:
           self.params[param] += -learning_rate * grads[param]
+      for param in ['b1', 'b2']:
+          self.params[param] += -learning_rate * grads[param].ravel()
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -243,7 +250,7 @@ class TwoLayerNet(object):
     #-----------#
     #http://cs231n.github.io/neural-networks-case-study/
     #Use relu as an activation function: np.max(0, ...)
-    hidden_layer = np.max(0, np.dot(X, self.params['W1']) + self.params['b1'])
+    hidden_layer = np.maximum(0, np.dot(X, self.params['W1']) + self.params['b1'])
     #Output layer
     scores = np.dot(hidden_layer, self.params['W2']) + self.params['b2']
 
