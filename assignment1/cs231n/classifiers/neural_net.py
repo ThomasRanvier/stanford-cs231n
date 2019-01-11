@@ -243,9 +243,9 @@ class TwoLayerNet(object):
     #-----------#
     #http://cs231n.github.io/neural-networks-case-study/
     #Use relu as an activation function: np.max(0, ...)
-    hidden_layer = np.max(0, np.dot(X, W1) + b1)
+    hidden_layer = np.max(0, np.dot(X, self.params['W1']) + self.params['b1'])
     #Output layer
-    scores = np.dot(hidden_layer, W2) + b2
+    scores = np.dot(hidden_layer, self.params['W2']) + self.params['b2']
 
     #We return argmax on the axis 1, it will give an array containing the index 
     #of the class chosen for each point.
