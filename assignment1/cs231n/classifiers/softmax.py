@@ -30,7 +30,11 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  #Shift the weights as in http://cs231n.github.io/linear-classify/
+  #Avoids numeric blowup caused by too big numbers in exp.
+  W -= np.max(W)
+  #Exponentiation + normalisation, the natural log is applied to the result
+  loss = np.log(np.exp(W) / np.sum(np.exp(W)))
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
