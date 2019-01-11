@@ -30,11 +30,32 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  #Shift the weights as in http://cs231n.github.io/linear-classify/
+  num_train = X.shape[0]
+  #------------#
+  #----Loss----#
+  #------------#
+  #Compute the scores, dimensions are N by C
+  scores = X.dot(W)
+  #Shift the scores as in http://cs231n.github.io/linear-classify/
   #Avoids numeric blowup caused by too big numbers in exp.
-  W -= np.max(W)
-  #Exponentiation + normalisation, the natural log is applied to the result
-  loss = np.log(np.exp(W) / np.sum(np.exp(W)))
+  #We want for each row of score to substract the max value of all the columns for each row, which is axis=1
+  #Exponentiation + normalisation, the minus natural log is applied to the result, Li is the array of the losses. Same axis as before for normalisation
+  #http://cs231n.github.io/neural-networks-case-study/#loss
+  exp_scores = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+  probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+  Li = -np.log(probs[range(num_train), y])
+  #Full loss = mean of Li + regularisation
+  loss = np.mean(Li) + (reg * np.sum(W * W))
+  #------------#
+  #--Gradient--#
+  #------------#
+  dscores = probs
+  dscores[range(num_train), y] -= 1.0
+  dW /= num_train
+  dW = np.dot(X.T, dscores)
+
+  # Gradient regularization
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -58,7 +79,32 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_train = X.shape[0]
+  #------------#
+  #----Loss----#
+  #------------#
+  #Compute the scores, dimensions are N by C
+  scores = X.dot(W)
+  #Shift the scores as in http://cs231n.github.io/linear-classify/
+  #Avoids numeric blowup caused by too big numbers in exp.
+  #We want for each row of score to substract the max value of all the columns for each row, which is axis=1
+  #Exponentiation + normalisation, the minus natural log is applied to the result, Li is the array of the losses. Same axis as before for normalisation
+  #http://cs231n.github.io/neural-networks-case-study/#loss
+  exp_scores = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+  probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+  Li = -np.log(probs[range(num_train), y])
+  #Full loss = mean of Li + regularisation
+  loss = np.mean(Li) + (reg * np.sum(W * W))
+  #------------#
+  #--Gradient--#
+  #------------#
+  dscores = probs
+  dscores[range(num_train), y] -= 1.0
+  dW /= num_train
+  dW = np.dot(X.T, dscores)
+
+  # Gradient regularization
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
