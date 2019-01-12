@@ -273,7 +273,16 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        pass
+        index = 1
+        cur_layer = X
+        for _ in range(self.num_layers - 1):
+            W = self.params['W' + str(index)]
+            b = self.params['b' + str(index)]
+            cur_layer = np.maximum(0, np.dot(X, W) + b)
+            index += 1
+        W = self.params['W' + str(index)]
+        b = self.params['b' + str(index)]
+        scores = np.dot(cur_layer, W) + b
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
