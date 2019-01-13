@@ -48,9 +48,9 @@ class TwoLayerNet(object):
         # and biases using the keys 'W2' and 'b2'.                                 #
         ############################################################################
         self.params['W1'] = np.random.normal(0, weight_scale, input_dim * hidden_dim).reshape((input_dim, hidden_dim))
-        self.params['b1'] = np.zeros(input_dim)
+        self.params['b1'] = np.zeros(hidden_dim)
         self.params['W2'] = np.random.normal(0, weight_scale, hidden_dim * num_classes).reshape((hidden_dim, num_classes))
-        self.params['b2'] = np.zeros(hidden_dim)
+        self.params['b2'] = np.zeros(num_classes)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -79,12 +79,12 @@ class TwoLayerNet(object):
         # TODO: Implement the forward pass for the two-layer net, computing the    #
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
-        W1 = self.params['W1']
-        b1 = self.params['b1']
-        W2 = self.params['W2']
-        b2 = self.params['b2']
-        hidden_layer = np.maximum(0, np.dot(X, W1) + b1)
-        scores = np.dot(hidden_layer, W2) + b2
+        out, cache = X, None
+        cache = [[None, None], [None, None]]
+        for i in [0, 1]:
+            out, cache[i][0] = affine_forward(out, self.params['W' + str(i + 1)], self.params['b' + str(i + 1)])
+            out, cache[i][1] = relu_forward(out)
+        scores = out
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -104,38 +104,16 @@ class TwoLayerNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        #---------------#
-        #-Normalisation-#
-        #---------------#
-        exp_scores = np.exp(scores - np.max(scores, axis=1, keepdims=True))
-        normalised_scores = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
-
-        #---------------#
-        #-----Loss------#
-        #---------------#
-        #Average cross entropy loss
-        data_loss = np.sum(-np.log(normalised_scores[range(N), y])) / N
-        reg_loss = reg * np.sum(W1 * W1) + reg * np.sum(W2 * W2)
-        loss = data_loss + reg_loss
-
-        #---------------#
-        #---Gradient----#
-        #---------------#
-        dscores = normalised_scores
-        dscores[range(N), y] -= 1
-        dscores /= N
-        grads['W2'] = np.dot(hidden_layer.T, dscores)
-        grads['b2'] = np.sum(dscores, axis=0, keepdims=True)
-        # next backprop into hidden layer
-        dhidden = np.dot(dscores, W2.T)
-        # backprop the ReLU non-linearity
-        dhidden[hidden_layer <= 0] = 0
-        # finally into W1, b1
-        grads['W1'] = np.dot(X.T, dhidden)
-        grads['b1'] = np.sum(dhidden, axis=0, keepdims=True)
-        # add regularization gradient contribution
-        grads['W2'] += 0.5 * reg * W2
-        grads['W1'] += 0.5 * reg * W1
+        loss, dx = softmax_loss(out, y)
+        for i in [1, 0]:
+            w = self.params['W' + str(i + 1)]
+            b = self.params['b' + str(i + 1)]
+            dx = relu_backward(dx, cache[i][1])
+            dx, dw, db = affine_backward(dx, cache[i][0])
+            grads['W' + str(i + 1)] = dw
+            grads['W' + str(i + 1)] += self.reg * w
+            grads['b' + str(i + 1)] = db
+            loss += 0.5 * self.reg * np.sum(w * w)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
