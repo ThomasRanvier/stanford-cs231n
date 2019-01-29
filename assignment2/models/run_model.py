@@ -1,5 +1,5 @@
-def run_model(logits, mean_loss, labels, train_step, Xd, yd, epochs=1, batch_size=64, print_every=100, device='cpu'):
-    def run(session, training=None, plot_losses=False):
+def run_my_model(logits, mean_loss, labels, train_step, X_train, y_train, X_val, y_val, epochs_train=10, batch_size=64, print_every=100, device='cpu'):
+    def run(session, Xd, yd, epochs, training=None, plot_losses=False):
         # have tensorflow compute accuracy
         correct_prediction = tf.equal(tf.argmax(logits,1), labels)
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -15,6 +15,8 @@ def run_model(logits, mean_loss, labels, train_step, Xd, yd, epochs=1, batch_siz
         variables = [mean_loss,correct_prediction,accuracy]
         if training_now:
             variables[-1] = training
+        else:
+            epochs = 1
         
         # counter 
         iter_cnt = 0
@@ -65,8 +67,8 @@ def run_model(logits, mean_loss, labels, train_step, Xd, yd, epochs=1, batch_siz
         with tf.device('/' + device + ':0'): #'/cpu:0' or '/gpu:0' 
             sess.run(tf.global_variables_initializer())
             print('Training')
-            run(sess,train_step,True)
+            run(sess, X_train, y_train, epochs_train, train_step, True)
             print('Validation')
-            run(sess)
+            run(sess, X_val, y_val, 1)
 
 

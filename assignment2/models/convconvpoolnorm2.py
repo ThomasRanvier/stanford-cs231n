@@ -1,12 +1,12 @@
 #conv, conv, pool, norm, conv, conv, pool, norm, affine, dropout, affine, softmax
 
-def model(images):
+def model(X):
     #layer1
     with tf.variable_scope('layer1') as scope:
         #conv1
         with tf.variable_scope('conv1') as scope:
             filters = tf.get_variable('filters', shape=[5, 5, 3, 64])
-            conv = tf.nn.conv2d(images, filters, [1, 1, 1, 1], padding='SAME')
+            conv = tf.nn.conv2d(X, filters, [1, 1, 1, 1], padding='SAME')
             biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.0))
             pre_activation = tf.nn.bias_add(conv, biases)
             conv1 = tf.nn.relu(pre_activation, name=scope.name)
@@ -41,7 +41,7 @@ def model(images):
     #norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm2')
     #affine1
     with tf.variable_scope('affine1') as scope:
-        reshape = tf.reshape(norm2, [images.get_shape().as_list()[0], -1])
+        reshape = tf.reshape(norm2, [-1, X.get_shape().as_list()[0]])
         dim1 = reshape.get_shape()[1].value
         dim2 = int(dim1 / 2)
         weights = tf.get_variable('weights', shape=[dim1, dim2])
@@ -66,18 +66,18 @@ def model(images):
         softmax_linear = tf.add(tf.matmul(local4, weights), biases, name=scope.name)
     return softmax_linear # To feed to the loss function # logits
 
-def loss(logits, labels):
-    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits, name='cross_entropy')
+def loss(logits, y):
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits, name='cross_entropy')
     cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy_mean')
     return cross_entropy_mean
 
-images = tf.placeholder(tf.float32, [None, 32, 32, 3])
-labels = tf.placeholder(tf.int64, [None])
-logits = model(images)
-mean_loss = loss(logits, labels)
+X = tf.placeholder(tf.float32, [None, 32, 32, 3])
+y = tf.placeholder(tf.int64, [None])
+logits = model(X)
+mean_loss = loss(logits, y)
 
 # Optimizer
 optimizer = tf.train.AdamOptimizer(5e-4) # select optimizer and set learning rate
 train_step = optimizer.minimize(mean_loss)
 
-run_model(logits, mean_loss, labels, train_step, X_train, y_train, 1, 64, 100, 'gpu')
+run_model(logits, mean_loss, y, train_step, X_train, y_train, 1, 64, 100, 'gpu')
