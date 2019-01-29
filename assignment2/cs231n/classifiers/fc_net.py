@@ -255,8 +255,11 @@ class FullyConnectedNet(object):
         i = 0
         for _ in range(self.num_layers - 1):
             if self.use_batchnorm:
-                out, cache[i] = affine_batchnorm_relu_forward(out, self.params['W' + str(i + 1)], self.params['b' + str(i + 1)],
-                        self.params['gamma' + str(i + 1)], self.params['beta' + str(i + 1)], self.bn_params[i])
+                if self.use_dropout:
+                    out, cache[i] = affine_batchnorm_relu_dropout_forward(out, self.params['W' + str(i + 1)], self.params['b' + str(i + 1)], self.params['gamma' + str(i + 1)], self.params['beta' + str(i + 1)], self.bn_params[i], self.dropout_param[i])
+                else:
+                    out, cache[i] = affine_batchnorm_relu_forward(out, self.params['W' + str(i + 1)], self.params['b' + str(i + 1)],
+                            self.params['gamma' + str(i + 1)], self.params['beta' + str(i + 1)], self.bn_params[i])
             else:
                 out, cache[i] = affine_relu_forward(out, self.params['W' + str(i + 1)], self.params['b' + str(i + 1)])
             i += 1
@@ -293,9 +296,14 @@ class FullyConnectedNet(object):
         while i > 0:
             i -= 1
             if self.use_batchnorm:
-                dx, dw, db, dgamma, dbeta = affine_batchnorm_relu_backward(dx, cache[i])
-                grads['gamma' + str(i + 1)] = dgamma
-                grads['beta' + str(i + 1)] = dbeta
+                if self.use_dropout:
+                    dx, dw, db, dgamma, dbeta = affine_batchnorm_relu_dropout_backward(dx, cache[i])
+                    grads['gamma' + str(i + 1)] = dgamma
+                    grads['beta' + str(i + 1)] = dbeta
+                else:
+                    dx, dw, db, dgamma, dbeta = affine_batchnorm_relu_backward(dx, cache[i])
+                    grads['gamma' + str(i + 1)] = dgamma
+                    grads['beta' + str(i + 1)] = dbeta
             else:
                 dx, dw, db = affine_relu_backward(dx, cache[i])
             grads['W' + str(i + 1)] = dw
