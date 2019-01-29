@@ -184,14 +184,14 @@ class FullyConnectedNet(object):
         index = 1
         last_d = input_dim
         for hd in hidden_dims:
-            self.params['W' + str(index)] = np.random.normal(0, weight_scale, last_d * hd).reshape((last_d, hd))
+            self.params['W' + str(index)] = np.random.normal(0, weight_scale, size=(last_d, hd))#last_d * hd).reshape((last_d, hd))
             self.params['b' + str(index)] = np.zeros(hd)
             if use_batchnorm:
                 self.params['gamma' + str(index)] = np.ones(hd)
                 self.params['beta' + str(index)] = np.zeros(hd)
             last_d = hd
             index += 1
-        self.params['W' + str(index)] = np.random.normal(0, weight_scale, last_d * num_classes).reshape((last_d, num_classes))
+        self.params['W' + str(index)] = np.random.normal(0, weight_scale, size=(last_d, hd))#last_d * num_classes).reshape((last_d, num_classes))
         self.params['b' + str(index)] = np.zeros(num_classes)
         ############################################################################
         #                             END OF YOUR CODE                             #
