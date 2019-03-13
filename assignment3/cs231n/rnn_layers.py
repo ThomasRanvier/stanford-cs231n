@@ -35,7 +35,7 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     # and cache variables respectively.                                          #
     ##############################################################################
     #From the video lecture: ht = tanh(Whh*(ht-1) + Wxh*xt)
-    next_h = tanh(Wx.dot(prev_h) + Wh.dot(x) + b)
+    next_h = np.tanh(x.dot(Wx)+prev_h.dot(Wh)+b)
     cache = (x, prev_h, next_h, Wx, Wh, b)
     ##############################################################################
     #                               END OF YOUR CODE                             #
